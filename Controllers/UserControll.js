@@ -85,7 +85,7 @@ const LoginUser = async (req, res) => {
     }
 
     existuser.refreshToken = token;
-    existuser.save({ validateBeforeSave: false });
+    await existuser.save({ validateBeforeSave: false });
 
     const loggedInUser = await Usermodel.findById(existuser._id).select(
       "-password "
