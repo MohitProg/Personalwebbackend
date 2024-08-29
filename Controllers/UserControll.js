@@ -9,19 +9,19 @@ import { ApiResponse } from "../Utils/ApiResponse.js";
 const SigninUser = async (req, res) => {
   const { name, email, password } = req.body;
 
+
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.send({ success: "error", errors: errors.array() });
+    return res.send({ success: "false", message: errors.array() });
   }
-
   try {
     const existuser = await Usermodel.findOne({ $or: [{ name }, { email }] });
-
     if (existuser) {
       return res.send(new ApiError(409, "User with name already exist"));
     }
 
-    const avatarLocalPath = req.files?.avatar[0]?.path;
+    const avatarLocalPath = req.file?.path;
+
     if (!avatarLocalPath) {
       return res.send(new ApiError(409, "Please Select and Image"));
     }
@@ -51,7 +51,7 @@ const SigninUser = async (req, res) => {
         new ApiResponse(200, CreateNewuser, "user registered successfully")
       );
   } catch (error) {
-    res.send({ success: false, msg: "Internal Server" });
+    res.send({ success: false, message: "Internal Server" });
   }
 };
 
@@ -62,21 +62,21 @@ const LoginUser = async (req, res) => {
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.send({ success: "error", errors: errors.array() });
+    return res.send({ success: "false", message: errors.array() });
   }
 
   try {
     const existuser = await Usermodel.findOne({ email });
 
     if (!existuser) {
-      return res.send({ success: false, msg: "User does't exist" });
+      return res.send({ success: false, message: "User does't exist" });
     }
 
     const passwordVerify = await existuser.isCorrectpassword(password);
     console.log(passwordVerify);
 
     if (!passwordVerify) {
-      return res.send({ success: false, msg: "Enter correct password" });
+      return res.send({ success: false, message: "Enter correct password" });
     }
 
     const token = await existuser.generateAccessToken();
@@ -102,16 +102,16 @@ const LoginUser = async (req, res) => {
       .json(
         new ApiResponse(
           200,
-          {
-            user: loggedInUser,
-          },
+
+          loggedInUser,
+
 
           "user login successfully"
         )
       );
   } catch (error) {
     console.log(error);
-    res.send({ success: false, msg: "Internal Server error" });
+    res.send({ success: false, message: "Internal Server error" });
   }
 };
 
@@ -120,13 +120,17 @@ const updateUser = async (req, res) => {
   try {
     const { name, desc, file } = req.body;
     const id = req.newuser;
-    console.log(id._id);
+
 
     if (req.file === undefined) {
       const updateuser = await Usermodel.findByIdAndUpdate(id._id, {
         name,
         desc,
-      });
+      },{new:true});
+console.log(updateuser)
+      return res
+      .status(201)
+      .json(new ApiResponse(200,updateuser, "User updated successfully123"));
     } else if (req.file !== undefined) {
       const { originalname, path } = req.file;
       const avatar = await UploadOnCloudinary(path);
@@ -146,28 +150,30 @@ const updateUser = async (req, res) => {
         },
         { new: true }
       );
+
+      return res
+      .status(201)
+      .json(new ApiResponse(200,updateuser, "User updated successfully234"));
     }
 
-    return res
-      .status(201)
-      .json(new ApiResponse(200, "User updated successfully"));
+ 
   } catch (error) {
     console.log(error);
-    res.send({ success: false, msg: "Internal Server error" });
+    res.send({ success: false, message: "Internal Server error" });
   }
 };
 
 //  delete User
 const deleteUser = async (req, res) => {
   const id = req.newuser;
-  console.log(id);
+
 
   try {
-    const deleteuser = await Usermodel.findByIdAndDelete(id._id);
+    await Usermodel.findByIdAndDelete(id._id);
 
-    console.log(deleteuser);
+
     if (!deleteUser) {
-      return res.send({ success: false, msg: "user Doesn't Delete" });
+      return res.send({ success: false, message: "user Doesn't Delete" });
     }
 
     return res
@@ -175,7 +181,7 @@ const deleteUser = async (req, res) => {
       .json(new ApiResponse(200, "user delete successfully"));
   } catch (error) {
     console.log(error);
-    return res.send({ success: false, msg: "Internal Server error" });
+    return res.send({ success: false, message: "Internal Server error" });
   }
 };
 
@@ -183,10 +189,10 @@ const deleteUser = async (req, res) => {
 
 const getUserdata = async (req, res) => {
   const id = req.newuser;
-  console.log(id);
+
   try {
     if (!id) {
-      return res.send({ success: false, msg: "Internal Server error" });
+      return res.send({ success: false, message: "Internal Server error" });
     }
 
     const userdata = await Usermodel.findById(id._id);
@@ -195,7 +201,7 @@ const getUserdata = async (req, res) => {
       .json(new ApiResponse(200, userdata, "user registered successfully"));
   } catch (error) {
     console.log(error);
-    return res.send({ success: false, msg: "Internal Server error" });
+    return res.send({ success: false, message: "Internal Server error" });
   }
 };
 

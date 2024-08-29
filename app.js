@@ -19,7 +19,7 @@ app.use(cors())
 // routes for file 
 app.use("/api/v1/user",userRoute);
 app.use("/api/v1/blog",blogroute)
-app.use("/api/v1/project",projectroute)
+app.use("/api/v1/user/project",projectroute)
 
 
 

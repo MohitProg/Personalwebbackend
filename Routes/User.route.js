@@ -8,11 +8,7 @@ const route = express.Router();
 
 
 
-route.route("/signup").post(upload.fields([{
-  name:"avatar",
-  maxCount:1
-  
-}]),[
+route.route("/signup").post(upload.single('avatar'),[
   [
     body("name").isLength({min:5}).withMessage("Name must be more than 5 Character"),
     // body("email").isEmail().withMessage("Enter valid Email"),

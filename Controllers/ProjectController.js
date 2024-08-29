@@ -12,14 +12,13 @@ try {
       return res.send({ success: true, getproject });
 } catch (error) {
     console.log(error);
-    return res.send({ success: false, msg: "Internal Server error" });
+    return res.send({ success: false, message: "Internal Server error" });
 }
 }
 
 const postproject=async(req,res)=>{
     const id = req.newuser;
-    console.log(id.id);
-    console.log(req.body);
+  
   
     try {
       const { projecttitle,prodescription,proUrl} = req.body;
@@ -33,16 +32,16 @@ const postproject=async(req,res)=>{
           file: filepath?.url,
         });
   
-        console.log(newProject);
+    
         await newProject.save();
   
-        return res.send({ success: true, msg: "Project  added succesfully" });
+        return res.send({ success: true, message: "Project  added succesfully" });
       } else {
-        return res.send({ success: false, msg: "please select a file" });
+        return res.send({ success: false, message: "please select a file" });
       }
     } catch (error) {
       console.log(error);
-      return res.send({ success: false, msg: "Internal Server error" });
+      return res.send({ success: false, message: "Internal Server error" });
     }
 }
 
@@ -64,7 +63,7 @@ const updateproject=async(req,res)=>{
         
           })
           
-          return res.send({ success: true, msg: "Project  UPdated succesfully" });
+          return res.send({ success: true, message: "Project  UPdated succesfully" });
         }else{
           console.log("mohit")
           const UpDateblog=await ProjectModel.findByIdAndUpdate(id,{
@@ -74,12 +73,12 @@ const updateproject=async(req,res)=>{
             proUrl,
           })
       
-          return res.send({ success: true, msg: "Blog  Project succesfully" });
+          return res.send({ success: true, message: "Blog  Project succesfully" });
       
         }
       } catch (error) {
         console.log(error)
-        return res.send({ success: false, msg: "Internal Server error" });
+        return res.send({ success: false, message: "Internal Server error" });
       }
 }
 
@@ -88,10 +87,10 @@ const deleteproject=async(req,res)=>{
         const id=req.params.id;
         console.log(id)
          const DeleteBlog=await ProjectModel.findByIdAndDelete(id);
-         return res.send({ success: true, msg: "Project Delete successfully" });
+         return res.send({ success: true, message: "Project Delete successfully" });
      } catch (error) {
         console.log(error)
-        return res.send({ success: false, msg: "Internal Server error" });
+        return res.send({ success: false, message: "Internal Server error" });
      }
 }
 

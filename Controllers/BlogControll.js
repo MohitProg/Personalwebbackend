@@ -9,26 +9,25 @@ const Getblogdata = async (req, res) => {
       "email",
       "avatar"
     ]);
-    console.log(getBlogs);
+
     return res.send({ success: true, getBlogs });
   } catch (error) {
     console.log(error);
-    return res.send({ success: false, msg: "Internal Server error" });
+    return res.send({ success: false, message: "Internal Server error" });
   }
 };
 
 const PostBlogdata = async (req, res) => {
   const id = req.newuser;
 
-
-
   try {
     const { category, title, summary, content } = req.body;
+    console.log(req.body)
 
     if (req.file !== undefined && req?.file?.originalname.length > 0) {
 
       const filepath=await UploadOnCloudinary(req?.file?.path);
-      const newProject = new BlogModel({
+      const newBlog = new BlogModel({
         Author: id?._id,
         category,
         title,
@@ -38,15 +37,16 @@ const PostBlogdata = async (req, res) => {
       });
 
 
-      await newProject.save();
+      await newBlog.save();
+      await newBlog.populate('Author',['name','email','avatar'])
 
-      return res.send({ success: true, msg: "Blog  added succesfully" });
+      return res.send({ success: true, newBlog, message: "Blog  added succesfully" });
     } else {
-      return res.send({ success: false, msg: "please select a file" });
+      return res.send({ success: false, message: "please select a file" });
     }
   } catch (error) {
     console.log(error);
-    return res.send({ success: false, msg: "Internal Server error" });
+    return res.send({ success: false, message: "Internal Server error" });
   }
 };
 
@@ -72,7 +72,7 @@ try {
   
     })
     
-    return res.send({ success: true, msg: "Blog  UPdated succesfully" });
+    return res.send({ success: true, message: "Blog  UPdated succesfully" });
   }else{
     console.log("mohit")
     const UpDateblog=await BlogModel.findByIdAndUpdate(id,{
@@ -84,12 +84,12 @@ try {
   
     })
 
-    return res.send({ success: true, msg: "Blog  UPdated succesfully" });
+    return res.send({ success: true, message: "Blog  UPdated succesfully" });
 
   }
 } catch (error) {
   console.log(error)
-  return res.send({ success: false, msg: "Internal Server error" });
+  return res.send({ success: false, message: "Internal Server error" });
 }
 
 
@@ -101,10 +101,10 @@ const DeleteBlogdata = async (req, res) => {
     const id=req.params.id;
     console.log(id)
      const DeleteBlog=await BlogModel.findByIdAndDelete(id);
-     return res.send({ success: true, msg: "Blog Delete successfully" });
+     return res.send({ success: true, message: "Blog Delete successfully" });
  } catch (error) {
     console.log(error)
-    return res.send({ success: false, msg: "Internal Server error" });
+    return res.send({ success: false, message: "Internal Server error" });
  }
 
 };
@@ -120,7 +120,7 @@ const GetBlogbyId = async (req, res) => {
     return res.send({ success: true, getblogdata });
   } catch (error) {
     console.log(error);
-    return res.send({ success: false, msg: "Internal Server error" });
+    return res.send({ success: false, message: "Internal Server error" });
   }
 };
 
@@ -136,7 +136,7 @@ const GetUserblogsdata = async (req, res) => {
     return res.send({ success: true, getuserblog });
   } catch (error) {
     console.log(error);
-    return res.send({ success: false, msg: "Internal Server error" });
+    return res.send({ success: false, message: "Internal Server error" });
   }
 };
 
@@ -164,7 +164,7 @@ if(search){
 
   } catch (error) {
     console.log(error);
-    return res.send({ success: false, msg: "Internal Server error" });
+    return res.send({ success: false, message: "Internal Server error" });
   }
 }
 
