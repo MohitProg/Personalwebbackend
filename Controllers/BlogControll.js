@@ -157,9 +157,9 @@ if(search){
   const data=await BlogModel.find(query).populate("Author", [
     "name",
     "email",
-    "file"
+    "avatar"
   ]);;
-  return res.status(200).send(data);
+  return res.status(200).send({success:true,data});
 }
 
   } catch (error) {
@@ -167,6 +167,9 @@ if(search){
     return res.send({ success: false, message: "Internal Server error" });
   }
 }
+
+
+
 
 export {
   Getblogdata,
@@ -176,4 +179,5 @@ export {
   GetUserblogsdata,
   GetBlogbyId,
   Searchblogdata,
+
 };

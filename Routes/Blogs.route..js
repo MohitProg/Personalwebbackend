@@ -16,4 +16,6 @@ route.post("/postblogs",AuthCheck,upload.single("file"),PostBlogdata)
 route.put("/updateblog/:id",AuthCheck, upload.single("file"),UpdateBlogdata)
 route.delete("/deleteblog/:id",AuthCheck,DeleteBlogdata)
 
+
+
 export default route;
