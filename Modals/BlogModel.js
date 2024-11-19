@@ -1,13 +1,13 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, Types } from "mongoose";
 const blogSchema=new mongoose.Schema({
 
     Author:{
-        type:Schema.Types.ObjectId,
+        type:mongoose.Schema.Types.ObjectId,
         ref:"User"
     },
 
     category:{
-        type:String,
+        type:Array,
         required:true
     },
     
@@ -28,6 +28,16 @@ const blogSchema=new mongoose.Schema({
         type:String,
         required:true
     },
+
+    likes:[
+        {
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"User"
+        }
+    ],
+
+
+   
 
     
     

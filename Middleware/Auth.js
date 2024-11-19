@@ -1,12 +1,13 @@
 import jwt from "jsonwebtoken";
+import { ApiResponse } from "../Utils/ApiResponse.js";
 
 const AuthCheck = async (req, res, next) => {
   try {
-    const token = req.header("auth-token");
-    console.log(token)
-
+    const token = req.header("auth-token")?.split(" ")[1];
+  
+   
     if (!token) {
-      return res.send({ success: false, msg: "please provide jwt token" });
+      return res.send(new ApiResponse(200,"","Authentication Required"));
     }
 
     const decode = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
@@ -16,7 +17,7 @@ const AuthCheck = async (req, res, next) => {
     next();
   } catch (error) {
     console.log(error);
-    res.send({ success: false, msg: "token is not found" });
+    res.send({ success: false, msg: error.message });
   }
 };
 

@@ -3,55 +3,51 @@ import { check, validationResult } from "express-validator";
 import { ApiError } from "../Utils/ApiError.js";
 import { UploadOnCloudinary } from "../Utils/Cloudinary.js";
 import { ApiResponse } from "../Utils/ApiResponse.js";
+import { SendWelcomeMail } from "../Middleware/SendMail.js";
 
 //  signup User
 
 const SigninUser = async (req, res) => {
   const { name, email, password } = req.body;
 
-
+  console.log(email);
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.send({ success: "false", message: errors.array() });
   }
+
   try {
-    const existuser = await Usermodel.findOne({ $or: [{ name }, { email }] });
+    const existuser = await Usermodel.findOne({ $and: [{ name }, { email }] });
+
     if (existuser) {
       return res.send(new ApiError(409, "User with name already exist"));
     }
 
-    const avatarLocalPath = req.file?.path;
-
-    if (!avatarLocalPath) {
-      return res.send(new ApiError(409, "Please Select and Image"));
-    }
-
-    const avatar = await UploadOnCloudinary(avatarLocalPath);
-
-    const User = new Usermodel({
+    let User = new Usermodel({
       name,
       email,
-      avatar: avatar.url,
+
       password,
     });
-
     await User.save();
 
-    const CreateNewuser = await Usermodel.findById(User?._id).select(
-      "-password -refreshToken"
-    );
+    //  method to generate a otp
+    const getRandomFourDigitNumber = () => {
+      return Math.floor(1000 + Math.random() * 9000);
+    };
 
-    if (!CreateNewuser) {
-      return res.send(new ApiError(500, "Something went wrong"));
-    }
+    const otp = getRandomFourDigitNumber();
+    console.log(otp);
 
+    User.verifyCode = otp;
+    User.save({ validateBeforeSave: true });
+    await SendWelcomeMail(email, otp, name);
     return res
       .status(201)
-      .json(
-        new ApiResponse(200, CreateNewuser, "user registered successfully")
-      );
+      .send(new ApiResponse(200, "", "Otp is Send to your email"));
   } catch (error) {
-    res.send({ success: false, message: "Internal Server" });
+    console.log(error.message);
+    res.send({ success: false, message: error.message });
   }
 };
 
@@ -73,7 +69,6 @@ const LoginUser = async (req, res) => {
     }
 
     const passwordVerify = await existuser.isCorrectpassword(password);
-    console.log(passwordVerify);
 
     if (!passwordVerify) {
       return res.send({ success: false, message: "Enter correct password" });
@@ -85,7 +80,7 @@ const LoginUser = async (req, res) => {
     }
 
     existuser.refreshToken = token;
-    await existuser.save({ validateBeforeSave: false });
+    await existuser.save({ validateBeforeSave: false });  
 
     const loggedInUser = await Usermodel.findById(existuser._id).select(
       "-password "
@@ -105,7 +100,6 @@ const LoginUser = async (req, res) => {
 
           loggedInUser,
 
-
           "user login successfully"
         )
       );
@@ -115,22 +109,58 @@ const LoginUser = async (req, res) => {
   }
 };
 
+
+// logout user functionality 
+
+const LogoutUser=async(req,res)=>{
+  const userid=req.newuser._id
+
+  try {
+    await Usermodel.findByIdAndUpdate({_id:userid},{
+      $set:{
+        refreshToken:null
+      }
+    },{new:true})
+
+    return res
+    .status(200)
+    .clearCookie("accessToken") 
+    .json(
+      new ApiResponse(
+        200,
+        "",
+        "User logged out successfully"
+      )
+    );
+    
+  } catch (error) {
+    console.log(error);
+    res.send({ success: false, message: "Internal Server error" });
+  }
+}
+//  route for hanlde otp verifications
 //  update user
 const updateUser = async (req, res) => {
+  console.log(req.file)
   try {
     const { name, desc, file } = req.body;
     const id = req.newuser;
 
-
     if (req.file === undefined) {
-      const updateuser = await Usermodel.findByIdAndUpdate(id._id, {
-        name,
-        desc,
-      },{new:true});
-console.log(updateuser)
+      const updateuser = await Usermodel.findByIdAndUpdate(
+        id._id,
+        {
+          $set: {
+            name,
+            desc,
+          },
+        },
+        { new: true }
+      );
+      console.log(updateuser);
       return res
-      .status(201)
-      .json(new ApiResponse(200,updateuser, "User updated successfully123"));
+        .status(201)
+        .json(new ApiResponse(200, updateuser, "User updated successfully123"));
     } else if (req.file !== undefined) {
       const { originalname, path } = req.file;
       const avatar = await UploadOnCloudinary(path);
@@ -152,11 +182,9 @@ console.log(updateuser)
       );
 
       return res
-      .status(201)
-      .json(new ApiResponse(200,updateuser, "User updated successfully234"));
+        .status(201)
+        .json(new ApiResponse(200, updateuser, "User updated successfully234"));
     }
-
- 
   } catch (error) {
     console.log(error);
     res.send({ success: false, message: "Internal Server error" });
@@ -167,10 +195,8 @@ console.log(updateuser)
 const deleteUser = async (req, res) => {
   const id = req.newuser;
 
-
   try {
     await Usermodel.findByIdAndDelete(id._id);
-
 
     if (!deleteUser) {
       return res.send({ success: false, message: "user Doesn't Delete" });
@@ -198,11 +224,42 @@ const getUserdata = async (req, res) => {
     const userdata = await Usermodel.findById(id._id);
     return res
       .status(201)
-      .json(new ApiResponse(200, userdata, "user registered successfully"));
+      .json(new ApiResponse(200, userdata, "getuserdata"));
   } catch (error) {
     console.log(error);
     return res.send({ success: false, message: "Internal Server error" });
   }
 };
 
-export { SigninUser, LoginUser, updateUser, deleteUser, getUserdata };
+// controler to verify account
+const VerifyAccount = async (req, res) => {
+  const { verifyCode } = req.body;
+  console.log(verifyCode);
+
+  //  lets find user here
+  const user = await Usermodel.findOne({ verifyCode: verifyCode });
+
+  if (!user) {
+    return res.send({ success: false, message: "invalid otp" });
+  }
+  const token = await user.generateAccessToken();
+  user.isVerfiy = true;
+  user.refreshToken = token;
+  user.verifyCode = null;
+  user.save({ validateBeforeSave: true });
+  return res
+    .status(201)
+    .json(new ApiResponse(200, user, "opt is verify successfully"));
+};
+
+// method to resend opt and expire it in some second
+
+export {
+  SigninUser,
+  LoginUser,
+  VerifyAccount,
+  updateUser,
+  deleteUser,
+  getUserdata,
+  LogoutUser,
+};

@@ -2,7 +2,7 @@ import express from "express";
 import {upload} from "../Middleware/multer.middleware.js"
 
 import { body, validationResult } from "express-validator";
-import { SigninUser, LoginUser, updateUser, deleteUser,getUserdata } from "../Controllers/UserControll.js";
+import { SigninUser, LoginUser, updateUser, deleteUser,getUserdata, VerifyAccount, LogoutUser } from "../Controllers/UserControll.js";
 import AuthCheck from "../Middleware/Auth.js";
 const route = express.Router();
 
@@ -28,6 +28,8 @@ route.post("/login", [
 route.put("/update",AuthCheck,upload.single("avatar"), updateUser);
 route.delete("/delete",AuthCheck, deleteUser);
 route.get("/getuser",AuthCheck,getUserdata);
-
+route.get("/logout",AuthCheck,LogoutUser)
+// route for email verification
+route.post("/verify/otp",VerifyAccount);
 
 export default route;
