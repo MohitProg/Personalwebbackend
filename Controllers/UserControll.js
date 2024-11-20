@@ -175,7 +175,7 @@ const updateUser = async (req, res) => {
             id,
             name,
             desc,
-            avatar: avatar.url,
+            avatar: avatar.secure_url,
           },
         },
         { new: true }

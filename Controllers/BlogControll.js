@@ -46,7 +46,7 @@ const PostBlogdata = async (req, res) => {
         category,
         title,
         summary,
-        file: filepath?.url,
+        file: filepath?.secure_url,
         content,
       });
 
@@ -95,7 +95,7 @@ const UpdateBlogdata = async (req, res) => {
         category,
         title,
         summary,
-        file: filepath,
+        file: filepath.secure_url,
         content,
       });
 
@@ -363,10 +363,10 @@ const GetSavedblogdata = async (req, res) => {
       "savedBlog"
     );
 
-    const recentblogdata = blogdata.savedBlog;
+    const savedblogdata = blogdata.savedBlog;
     return res
       .status(201)
-      .send(new ApiResponse(200, recentblogdata, "saved blog data "));
+      .send(new ApiResponse(200, savedblogdata, "saved blog data "));
   } catch (error) {
     console.log(error);
     return res.send({ success: false, message: "Internal Server error" });
