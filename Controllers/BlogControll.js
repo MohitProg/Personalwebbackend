@@ -5,35 +5,34 @@ import { UploadOnCloudinary } from "../Utils/Cloudinary.js";
 import { v2 as cloudinary } from "cloudinary";
 import Usermodel from "../Modals/Usermodel.js";
 import { SendAddBlogNotification } from "../Middleware/SendMail.js";
+import { trusted } from "mongoose";
 const Getblogdata = async (req, res) => {
-  console.log(req.query)
-  const {page,limit}=req.query;
-  const pagevalue=parseInt(page)||1
-  const limitvalue=parseInt(limit)||10
-  const skip=(page-1)*limit
-
-
-
-
+  console.log(req.query);
+  const { page, limit } = req.query;
+  const pagevalue = parseInt(page) || 1;
+  const limitvalue = parseInt(limit) || 10;
+  const skip = (page - 1) * limit;
 
   try {
-    const totalblog=(await BlogModel.find())?.length;
+    const totalblog = (await BlogModel.find())?.length;
 
-    const getBlogs = await BlogModel.find().skip(skip).limit(limitvalue).sort({ createdAt: -1 });
+    const getBlogs = await BlogModel.find()
+      .skip(skip)
+      .limit(limitvalue)
+      .sort({ createdAt: -1 });
 
-    return res.status(201).send(new ApiResponse(200, {getBlogs,totalblog}, "getallblogs"));
+    return res
+      .status(201)
+      .send(new ApiResponse(200, { getBlogs, totalblog }, "getallblogs"));
   } catch (error) {
     console.log(error);
     return res.send({ success: false, message: "Internal Server error" });
   }
 };
 
-
-
 // post single blog data
 const PostBlogdata = async (req, res) => {
   const id = req.newuser;
-
 
   try {
     const { category, title, summary, content } = req.body;
@@ -52,21 +51,15 @@ const PostBlogdata = async (req, res) => {
 
       await newBlog.save();
 
-      const users=await Usermodel.find({_id:{$ne:id?._id}});
+      const users = await Usermodel.find({ _id: { $ne: id?._id } });
 
-      let emailArray=[];
-      users.forEach((value)=>{
-        emailArray?.push(value?.email)
-      })
+      let emailArray = [];
+      users.forEach((value) => {
+        emailArray?.push(value?.email);
+      });
 
-
-      console.log(emailArray)
-     await  SendAddBlogNotification(emailArray,title);
-      
-
-
-      
-
+      console.log(emailArray);
+      await SendAddBlogNotification(emailArray, title);
 
       return res
         .status(201)
@@ -124,10 +117,19 @@ const UpdateBlogdata = async (req, res) => {
 
 //  delete blog
 const DeleteBlogdata = async (req, res) => {
+  const userid=req.newuser?._id
+  const id = req.params.id;
+
   try {
-    const id = req.params.id;
-    console.log(id);
-    const DeleteBlog = await BlogModel.findByIdAndDelete(id);
+    
+    
+    const DeleteBlog = await BlogModel.findByIdAndDelete(id)
+    await Usermodel.findByIdAndUpdate({_id:userid},{
+      $pull:{
+        recentBlog:id,
+        savedBlog:id
+      }
+    },{new:true})
     const obj = {};
     obj["type"] = DeleteBlog?.file.includes("video") ? "video" : "image";
     obj["publicid"] = DeleteBlog.file.split("/").pop().split(".")[0];
@@ -240,49 +242,55 @@ const checkandAddrecentblog = async (req, res) => {
     let user;
     user = await Usermodel.findOne({ _id: userid });
 
-    // check the blog exist oor not
-    const existblog = await Usermodel.findOne({
-      _id: userid,
-      recentBlog: { $in: blogid },
-    });
+    if (!user) {
+      return res.status(404).send({ success: false, message: "User not found" });
+    }
+
+    // Check if the blog exists in recentBlog
+    const existblog = user.recentBlog.includes(blogid);
+    console.log(existblog)
 
     if (existblog) {
+      // Pull the blog and then push it to the end of the recentBlog array
       user = await Usermodel.findByIdAndUpdate(
         { _id: userid },
         {
           $pull: {
             recentBlog: blogid,
           },
-        }
-      ).then(async () => {
-        await Usermodel.findByIdAndUpdate(
-          { _id: userid },
-          {
-            $push: {
-              recentBlog: blogid,
-            },
-          }
-        );
-      });
-    } else {
-      user = await Usermodel.findByIdAndUpdate(
+        },{new:true}
+      );
+
+      // Push it back to the array
+      await Usermodel.findByIdAndUpdate(
         { _id: userid },
         {
           $push: {
             recentBlog: blogid,
           },
-        }
+        },{new:true}
+      );
+    } else {
+      // Push it directly if it doesn't exist
+      await Usermodel.findByIdAndUpdate(
+        { _id: userid },
+        {
+          $push: {
+            recentBlog: blogid,
+          },
+        },{new:true}
       );
     }
 
-    return res
-      .status(201)
-      .send(new ApiResponse(200, "", "update recent blogs  "));
+    return res.status(201).send(new ApiResponse(200, "", "Updated recent blogs successfully"));
+
   } catch (error) {
-    console.log(error);
-    return res.send({ success: false, message: "Internal Server error" });
+    console.error(error); // Log the error for debugging
+    return res.status(500).send({ success: false, message: "Internal Server error" });
   }
 };
+
+
 
 // method to get recent blog data
 
@@ -303,6 +311,8 @@ const Getrecentblogdata = async (req, res) => {
   }
 };
 
+
+
 // saved blog data
 
 const SavedBlog = async (req, res) => {
@@ -314,9 +324,9 @@ const SavedBlog = async (req, res) => {
       _id: userid,
       savedBlog: { $in: [blogid] }, // Use an array for $in
     });
-    
+
     console.log(checkExistBlog);
-    
+
     if (checkExistBlog) {
       // If blog exists, remove it
       const updatedUser = await Usermodel.findOneAndUpdate(
@@ -326,11 +336,15 @@ const SavedBlog = async (req, res) => {
         },
         { new: true } // Ensure the updated document is returned
       ).populate("savedBlog");
-    
+
       return res
         .status(200) // Use 200 for successful responses
         .send(
-          new ApiResponse(200, updatedUser?.savedBlog, "Blog unsaved successfully")
+          new ApiResponse(
+            200,
+            updatedUser?.savedBlog,
+            "Blog unsaved successfully"
+          )
         );
     } else {
       // If blog does not exist, add it
@@ -341,14 +355,17 @@ const SavedBlog = async (req, res) => {
         },
         { new: true } // Ensure the updated document is returned
       ).populate("savedBlog");
-    
+
       return res
         .status(200) // Use 200 for successful responses
         .send(
-          new ApiResponse(200, updatedUser?.savedBlog, "Blog saved successfully")
+          new ApiResponse(
+            200,
+            updatedUser?.savedBlog,
+            "Blog saved successfully"
+          )
         );
     }
-    
   } catch (error) {
     console.log(error);
     return res.send({ success: false, message: "Internal Server error" });
@@ -373,56 +390,55 @@ const GetSavedblogdata = async (req, res) => {
   }
 };
 
-
 // like the blogs
 
-const LikeAndDisliketheblog=async(req,res)=>{
-  const userid=req.newuser._id
-  const blogid=req.params.id
+const LikeAndDisliketheblog = async (req, res) => {
+  const userid = req.newuser._id;
+  const blogid = req.params.id;
 
   try {
-    // check you already like this blog or not 
-    const checkLikeordislike=await BlogModel.findOne({_id:blogid,likes:{$in:userid}})
-    console.log(checkLikeordislike)
+    // check you already like this blog or not
+    const checkLikeordislike = await BlogModel.findOne({
+      _id: blogid,
+      likes: { $in: userid },
+    });
+    console.log(checkLikeordislike);
 
-    if(checkLikeordislike){
-      const updateblog=await BlogModel.findByIdAndUpdate({_id:blogid},{
-        $pull:{
-          likes:userid
-        }
-      },{new:true});
-
-      return res
-      .status(201)
-      .send(new ApiResponse(200, updateblog, "dislike the blog "));
-
-
-
-    }else{
-      const updateblog=await BlogModel.findByIdAndUpdate({_id:blogid},{
-        $push:{
-          likes:userid
-        }
-      },{new:true});
+    if (checkLikeordislike) {
+      const updateblog = await BlogModel.findByIdAndUpdate(
+        { _id: blogid },
+        {
+          $pull: {
+            likes: userid,
+          },
+        },
+        { new: true }
+      );
 
       return res
-      .status(201)
-      .send(new ApiResponse(200, updateblog, "like the blog "));
+        .status(201)
+        .send(new ApiResponse(200, updateblog, "dislike the blog "));
+    } else {
+      const updateblog = await BlogModel.findByIdAndUpdate(
+        { _id: blogid },
+        {
+          $push: {
+            likes: userid,
+          },
+        },
+        { new: true }
+      );
+
+      return res
+        .status(201)
+        .send(new ApiResponse(200, updateblog, "like the blog "));
     }
-
-
-
-
-    
   } catch (error) {
     console.log(error);
     return res.send({ success: false, message: "Internal Server error" });
   }
-
-
-
-}
-// dislike the blogs 
+};
+// dislike the blogs
 
 export {
   Getblogdata,
@@ -437,5 +453,6 @@ export {
   checkandAddrecentblog,
   SavedBlog,
   GetSavedblogdata,
-  LikeAndDisliketheblog
+  LikeAndDisliketheblog,
+ 
 };

@@ -11,9 +11,11 @@ const route=express.Router();
 route.get("/getblogs",Getblogdata);
 route.post("/savedblog/:id",AuthCheck,SavedBlog)
 route.get("/getsavedblog",AuthCheck,GetSavedblogdata)
+
 route.get("/category",GetblogbyCategorys);
 route.put("/recentblog/:id",AuthCheck,checkandAddrecentblog);
 route.get("/getrecentblog",AuthCheck,Getrecentblogdata);
+
 route.get("/searchblog",Searchblogdata)
 route.get("/getblogs/:id", GetBlogbyId)
 route.get("/getuserblogs", AuthCheck,GetUserblogsdata)
