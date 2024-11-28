@@ -20,69 +20,58 @@ export const SendWelcomeMail = async (email, otp, name) => {
       subject: "Welcome to WebTech Blogs  ",
       text: "",
       html: `<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f9f9f9;
-      margin: 0;
-      padding: 0;
-      color: #333333;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      background-color: #ffffff;
-      padding: 20px;
-      border-radius: 5px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    .header {
-      text-align: center;
-      padding: 10px 0;
-      background-color: #4a90e2;
-      color: #ffffff;
-      border-radius: 5px 5px 0 0;
-    }
-    .content {
-      margin-top: 20px;
-      text-align: center;
-      color:"white"
-    }
-    .button {
-      display: inline-block;
-      padding: 10px 20px;
-      margin-top: 20px;
-      background-color: #4a90e2;
-      color: #ffffff;
-      text-decoration: none;
-      border-radius: 5px;
-    }
-    .footer {
-      margin-top: 20px;
-      text-align: center;
-      font-size: 12px;
-      color: #777777;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your OTP Code</title>
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>Verify Your Account</h1>
+<body style="font-family: 'Arial', sans-serif; margin: 0; padding: 0; background-color: #f7f9fc; color: #333;">
+
+  <div style="max-width: 600px; margin: 30px auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); overflow: hidden;">
+
+    <!-- Header -->
+    <div style="background: linear-gradient(90deg, #4A90E2, #004C97); color: #ffffff; text-align: center; padding: 30px;">
+      <h1 style="margin: 0; font-size: 28px; font-weight: bold;">🔒 Your OTP Code</h1>
+      <p style="margin: 10px 0 0; font-size: 16px;">Secure your account with the code below</p>
     </div>
-    <div class="content">
-      <p>Hello  ${name}</p>
-      <p>${otp}</p>
+
+    <!-- Body Content -->
+    <div style="padding: 25px; text-align: center;">
+      <p style="font-size: 16px; line-height: 1.8; margin: 0;">
+        Hello, ${name}
+      </p>
+      <p style="font-size: 16px; line-height: 1.8; margin: 15px 0;">
+        To complete your action, please use the following One-Time Password (OTP). This code is valid for <b>10 minutes</b>.
+      </p>
+      <div style="margin: 30px 0;">
+        <p style="font-size: 32px; font-weight: bold; color: #4A90E2; letter-spacing: 2px; margin: 0;">
+          ${otp}
+        </p>
+      </div>
+      <p style="font-size: 14px; color: #666; margin: 15px 0;">
+        If you didn’t request this, please ignore this email or contact our support team.
+      </p>
     </div>
-    <div class="footer">
-      <p>If you have any questions, feel free to reach out to us at <a href="mailto:support@webtechblog.com">support@webtechblog.com</a>.</p>
-      <p>WebTechBlog © 2024. All rights reserved.</p>
+
+    <!-- Divider -->
+    <hr style="border: 0; border-top: 1px solid #e6e6e6; margin: 30px 0;">
+
+    <!-- Footer -->
+    <div style="background-color: #f7f9fc; text-align: center; padding: 15px;">
+      <p style="font-size: 14px; color: #666; margin: 0;">
+        Need help? Contact us at <a href="mailto:support@yourdomain.com" style="color: #4A90E2; text-decoration: none;">support@yourdomain.com</a>.
+      </p>
+      <p style="font-size: 14px; color: #666; margin: 10px 0 0;">
+        &copy; 2024 Your Company | All Rights Reserved
+      </p>
     </div>
+
   </div>
+
 </body>
 </html>
+
 `,
     });
   } catch (error) {
@@ -91,7 +80,7 @@ export const SendWelcomeMail = async (email, otp, name) => {
 };
 
 // send add blog mail
-export const SendAddBlogNotification = async (email, title) => {
+export const SendAddBlogNotification = async (email, title,id) => {
   try {
     const recipients = Array.isArray(email) ? email.join(",") : email;
 
@@ -107,36 +96,45 @@ export const SendAddBlogNotification = async (email, title) => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>New Blog Announcement</title>
 </head>
-<body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
+<body style="font-family: 'Arial', sans-serif; margin: 0; padding: 0; background-color: #f7f9fc; color: #333;">
 
-  <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden;">
-    
+  <div style="max-width: 600px; margin: 30px auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); overflow: hidden;">
+
     <!-- Header -->
-    <div style="background-color: #090D1F; color: #ffffff; text-align: center; padding: 20px;">
-      <h1 style="margin: 0; font-size: 24px;">New Blog Post Alert 🚀</h1>
+    <div style="background: linear-gradient(90deg, #4A90E2, #004C97); color: #ffffff; text-align: center; padding: 30px;">
+      <h1 style="margin: 0; font-size: 28px; font-weight: bold;">🚀 New Blog Post Alert</h1>
+      <p style="margin: 10px 0 0; font-size: 16px;">Stay ahead with the latest insights from WebTech Blogs</p>
     </div>
 
     <!-- Body Content -->
-    <div style="padding: 20px;">
-      <p style="font-size: 16px; color: #333333; line-height: 1.5;">
-        Hello, 
+    <div style="padding: 25px;">
+      <p style="font-size: 16px; line-height: 1.8; margin: 0;">
+        Hi there,
       </p>
-      <p style="font-size: 16px; color: #333333; line-height: 1.5;">
-        We are excited to share a brand new blog post on <b>WebTech Blogs</b>! This article dives deep into the latest trends, insights, and tips you won't want to miss.
+      <p style="font-size: 16px; line-height: 1.8; margin: 15px 0;">
+        We’re thrilled to announce the release of our latest blog post on <b>WebTech Blogs</b>! This article uncovers the secrets to mastering the newest trends, offering actionable tips just for you.
       </p>
-      <p style="font-size: 16px; color: #333333; line-height: 1.5;">
-        Check out our latest blog post: <b>"${title}"</b> and explore valuable insights crafted just for you.
+      <p style="font-size: 16px; line-height: 1.8; margin: 15px 0;">
+        Dive into our latest blog post: <b>"${title}"</b>. It’s packed with knowledge you won't want to miss.
       </p>
-      <p style="font-size: 16px; color: #333333; line-height: 1.5;">
-        <a href="[Your Blog URL]" target="_blank" style="color: #ffffff; background-color: #007BFF; text-decoration: none; padding: 10px 20px; border-radius: 5px; display: inline-block; font-size: 16px; margin-top: 10px;">Read the Blog</a>
-      </p>
+      <div style="text-align: center; margin-top: 30px;">
+        <a href=${`https://webtechversion2.web.app/blog/${id}`} target="_blank" 
+           style="display: inline-block; background-color: #4A90E2; color: #ffffff; text-decoration: none; padding: 12px 30px; font-size: 16px; border-radius: 8px; font-weight: bold; transition: background-color 0.3s ease;">
+          Read the Blog
+        </a>
+      </div>
     </div>
 
+    <!-- Divider -->
+    <hr style="border: 0; border-top: 1px solid #e6e6e6; margin: 30px 0;">
+
     <!-- Footer -->
-    <div style="background-color: #f4f4f4; text-align: center; padding: 10px;">
-      <p style="font-size: 12px; color: #666666; margin: 0;">
-        You're receiving this email because you're subscribed to WebTech Blogs. 
-        <br>Want to unsubscribe? <a href="[Unsubscribe URL]" style="color: #007BFF; text-decoration: none;">Click here</a>.
+    <div style="background-color: #f7f9fc; text-align: center; padding: 15px;">
+      <p style="font-size: 14px; color: #666; margin: 0;">
+        You’re receiving this email because you subscribed to WebTech Blogs. If you wish to unsubscribe, <a href="[Unsubscribe URL]" style="color: #4A90E2; text-decoration: none;">click here</a>.
+      </p>
+      <p style="font-size: 14px; color: #666; margin: 10px 0 0;">
+        &copy; 2024 WebTech Blogs | All Rights Reserved
       </p>
     </div>
 
@@ -144,6 +142,7 @@ export const SendAddBlogNotification = async (email, title) => {
 
 </body>
 </html>
+
 `,
     });
   } catch (error) {

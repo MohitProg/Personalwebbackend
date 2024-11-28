@@ -7,19 +7,50 @@ import Usermodel from "../Modals/Usermodel.js";
 import { SendAddBlogNotification } from "../Middleware/SendMail.js";
 import { trusted } from "mongoose";
 const Getblogdata = async (req, res) => {
-  console.log(req.query);
-  const { page, limit } = req.query;
+ 
+  const { page, limit, search } = req.query;
   const pagevalue = parseInt(page) || 1;
   const limitvalue = parseInt(limit) || 10;
-  const skip = (page - 1) * limit;
+  const skip = (pagevalue - 1) * limitvalue;
 
   try {
-    const totalblog = (await BlogModel.find())?.length;
+    let getBlogs;
+    let totalblog;
 
-    const getBlogs = await BlogModel.find()
-      .skip(skip)
-      .limit(limitvalue)
-      .sort({ createdAt: -1 });
+    if (search?.length > 0 && search !== "undefined") {
+      getBlogs = await BlogModel.find({
+        $or: [
+          { title: { $regex: search, $options: "i" } },
+          { content: { $regex: search, $options: "i" } },
+          { summary: { $regex: search, $options: "i" } },
+        ],
+      })
+        .skip(skip)
+        .limit(limitvalue)
+        .sort({ createdAt: -1 });
+
+        totalblog = (await BlogModel.find({
+          $or: [
+            { title: { $regex: search, $options: "i" } },
+            { content: { $regex: search, $options: "i" } },
+            { summary: { $regex: search, $options: "i" } },
+          ],
+        })).length;
+         
+
+
+    } else {
+      getBlogs = await BlogModel.find()
+        .skip(skip)
+        .limit(limitvalue)
+        .sort({ createdAt: -1 });
+
+        totalblog = (await BlogModel.find())?.length;
+
+     
+    }
+
+    console.log("total blog",totalblog)
 
     return res
       .status(201)
@@ -59,7 +90,7 @@ const PostBlogdata = async (req, res) => {
       });
 
       console.log(emailArray);
-      await SendAddBlogNotification(emailArray, title);
+      await SendAddBlogNotification(emailArray, title,newBlog?._id);
 
       return res
         .status(201)
@@ -117,19 +148,21 @@ const UpdateBlogdata = async (req, res) => {
 
 //  delete blog
 const DeleteBlogdata = async (req, res) => {
-  const userid=req.newuser?._id
+  const userid = req.newuser?._id;
   const id = req.params.id;
 
   try {
-    
-    
-    const DeleteBlog = await BlogModel.findByIdAndDelete(id)
-    await Usermodel.findByIdAndUpdate({_id:userid},{
-      $pull:{
-        recentBlog:id,
-        savedBlog:id
-      }
-    },{new:true})
+    const DeleteBlog = await BlogModel.findByIdAndDelete(id);
+    await Usermodel.findByIdAndUpdate(
+      { _id: userid },
+      {
+        $pull: {
+          recentBlog: id,
+          savedBlog: id,
+        },
+      },
+      { new: true }
+    );
     const obj = {};
     obj["type"] = DeleteBlog?.file.includes("video") ? "video" : "image";
     obj["publicid"] = DeleteBlog.file.split("/").pop().split(".")[0];
@@ -204,32 +237,6 @@ const GetblogbyCategorys = async (req, res) => {
     return res.send({ success: false, message: "Internal Server error" });
   }
 };
-// search blog data
-const Searchblogdata = async (req, res) => {
-  try {
-    const { search } = req.query;
-    console.log(search);
-    let query = {};
-    if (search) {
-      query = {
-        $or: [
-          { title: { $regex: search, $options: "i" } },
-          { category: { $regex: search, $options: "i" } },
-          { content: { $regex: search, $options: "i" } },
-        ],
-      };
-      const data = await BlogModel.find(query).populate("Author", [
-        "name",
-        "email",
-        "avatar",
-      ]);
-      return res.status(200).send({ success: true, data });
-    }
-  } catch (error) {
-    console.log(error);
-    return res.send({ success: false, message: "Internal Server error" });
-  }
-};
 
 // get recent blog post
 const checkandAddrecentblog = async (req, res) => {
@@ -243,12 +250,14 @@ const checkandAddrecentblog = async (req, res) => {
     user = await Usermodel.findOne({ _id: userid });
 
     if (!user) {
-      return res.status(404).send({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .send({ success: false, message: "User not found" });
     }
 
     // Check if the blog exists in recentBlog
     const existblog = user.recentBlog.includes(blogid);
-    console.log(existblog)
+    console.log(existblog);
 
     if (existblog) {
       // Pull the blog and then push it to the end of the recentBlog array
@@ -258,7 +267,8 @@ const checkandAddrecentblog = async (req, res) => {
           $pull: {
             recentBlog: blogid,
           },
-        },{new:true}
+        },
+        { new: true }
       );
 
       // Push it back to the array
@@ -268,7 +278,8 @@ const checkandAddrecentblog = async (req, res) => {
           $push: {
             recentBlog: blogid,
           },
-        },{new:true}
+        },
+        { new: true }
       );
     } else {
       // Push it directly if it doesn't exist
@@ -278,19 +289,21 @@ const checkandAddrecentblog = async (req, res) => {
           $push: {
             recentBlog: blogid,
           },
-        },{new:true}
+        },
+        { new: true }
       );
     }
 
-    return res.status(201).send(new ApiResponse(200, "", "Updated recent blogs successfully"));
-
+    return res
+      .status(201)
+      .send(new ApiResponse(200, "", "Updated recent blogs successfully"));
   } catch (error) {
     console.error(error); // Log the error for debugging
-    return res.status(500).send({ success: false, message: "Internal Server error" });
+    return res
+      .status(500)
+      .send({ success: false, message: "Internal Server error" });
   }
 };
-
-
 
 // method to get recent blog data
 
@@ -310,8 +323,6 @@ const Getrecentblogdata = async (req, res) => {
     return res.send({ success: false, message: "Internal Server error" });
   }
 };
-
-
 
 // saved blog data
 
@@ -438,7 +449,6 @@ const LikeAndDisliketheblog = async (req, res) => {
     return res.send({ success: false, message: "Internal Server error" });
   }
 };
-// dislike the blogs
 
 export {
   Getblogdata,
@@ -448,11 +458,9 @@ export {
   GetUserblogsdata,
   Getrecentblogdata,
   GetBlogbyId,
-  Searchblogdata,
   GetblogbyCategorys,
   checkandAddrecentblog,
   SavedBlog,
   GetSavedblogdata,
   LikeAndDisliketheblog,
- 
 };

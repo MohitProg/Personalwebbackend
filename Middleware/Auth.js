@@ -17,7 +17,7 @@ const AuthCheck = async (req, res, next) => {
     next();
   } catch (error) {
     console.log(error);
-    res.send({ success: false, msg: error.message });
+    return res.send({ success: false, msg: error.message });
   }
 };
 

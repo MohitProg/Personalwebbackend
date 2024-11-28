@@ -3,7 +3,7 @@ import AuthCheck from "../Middleware/Auth.js";
 
 import { upload } from "../Middleware/multer.middleware.js";
 
-import {Getblogdata,PostBlogdata,Searchblogdata,UpdateBlogdata,DeleteBlogdata, GetUserblogsdata, GetBlogbyId, GetblogbyCategorys, checkandAddrecentblog, Getrecentblogdata, SavedBlog, GetSavedblogdata, LikeAndDisliketheblog} from "../Controllers/BlogControll.js"
+import {Getblogdata,PostBlogdata,UpdateBlogdata,DeleteBlogdata, GetUserblogsdata, GetBlogbyId, GetblogbyCategorys, checkandAddrecentblog, Getrecentblogdata, SavedBlog, GetSavedblogdata, LikeAndDisliketheblog} from "../Controllers/BlogControll.js"
 
 const route=express.Router();
 
@@ -16,7 +16,7 @@ route.get("/category",GetblogbyCategorys);
 route.put("/recentblog/:id",AuthCheck,checkandAddrecentblog);
 route.get("/getrecentblog",AuthCheck,Getrecentblogdata);
 
-route.get("/searchblog",Searchblogdata)
+
 route.get("/getblogs/:id", GetBlogbyId)
 route.get("/getuserblogs", AuthCheck,GetUserblogsdata)
 route.post("/postblogs",AuthCheck,upload.single("file"),PostBlogdata)

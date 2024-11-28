@@ -1,5 +1,5 @@
 import express, { urlencoded } from "express";
-import cors from "cors"
+import cors from "cors";
 import cookieParser from "cookie-parser";
 import userRoute from "./Routes/User.route.js"
 
@@ -13,9 +13,7 @@ app.use(express.static("public"));
 
 app.use(express.json())
 
-
-app.use(cors())
-
+app.use(cors());
 
 // routes for file 
 app.use("/api/v1/user",userRoute);
